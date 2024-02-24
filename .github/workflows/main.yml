@@ -1,13 +1,15 @@
 name: Check and Build
 
 env:
-  kernel_repository: PixelExperience-Devices/kernel_xiaomi_polaris
-  kernel_branch: thirteen
+  kernel_repository: LineageOS/android_kernel_xiaomi_sdm845
+  kernel_branch: lineage-21
   device: dipper
   clang_version: r487747c
   defconfig: |
-    dipper_defconfig
+    vendor/xiaomi/mi845_defconfig
+    vendor/xiaomi/dipper.config
   kernel_patch: |
+    allow-init-exec-ksud-under-nosuid.patch
     support-umount-modules-kernel.patch
   kernelsu_patch: |
     support-umount-modules-kernelsu.patch
