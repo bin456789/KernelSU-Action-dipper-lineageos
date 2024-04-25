@@ -4,6 +4,7 @@ env:
   kernel_repository: LineageOS/android_kernel_xiaomi_sdm845
   kernel_branch: lineage-21
   device: dipper
+  kernel: lineageOS
   clang_version: r487747c
   defconfig: |
     vendor/xiaomi/mi845_defconfig
@@ -15,7 +16,7 @@ env:
 
 on:
   schedule:
-    - cron: "50 9,21 * * *"
+    - cron: "0 0,12 * * *"
   workflow_dispatch:
     inputs:
       allow_rebuild:
@@ -27,7 +28,7 @@ jobs:
   check_kernelsu_update:
     name: Check KernelSU update
     runs-on: ubuntu-latest
-    steps:
+    steps: 
       - name: Check KernelSU version
         id: check_kernelsu_version
         run: |
@@ -62,6 +63,9 @@ jobs:
               clang_version=$(curl -L https://android.googlesource.com/kernel/common/+/refs/heads/android-mainline/build.config.constants | grep -Eo 'r[0-9]{6}[a-z]?[0-9]?')
               echo clang_version=$clang_version | tee -a $GITHUB_ENV
           fi
+
+      - name: Set build date
+        run: echo "builddate=$(date +'%Y%m%d')" >> $GITHUB_ENV
 
       - name: Install packages
         run: |
@@ -184,7 +188,7 @@ jobs:
       - name: Make
         run: |
           make $flags -j$(nproc --all)
-
+          
       - name: AnyKernel3
         run: |
           curl -Lo AnyKernel3.zip https://github.com/osm0sis/AnyKernel3/archive/refs/heads/master.zip
@@ -217,12 +221,13 @@ jobs:
 
           cd AnyKernel3-master
           rm -rf .git* README.md
-          zip -r ../boot.zip *
+          # zip -r ../boot.zip *
+          zip -r ../"${{ env.kernel }}-${{ env.device }}-${{ env.builddate }}-AnyKernel3.zip" *
 
       - name: "Upload artifact"
         uses: actions/upload-artifact@v4
         with:
-          name: boot
+          name: boot_AnyKernel3
           path: AnyKernel3-master/*
 
       - name: Release
@@ -241,5 +246,5 @@ jobs:
 
             KernelSU:
             https://github.com/tiann/KernelSU/releases/tag/${{ env.kernelsu_remote_version }}
-          files: |
-            boot.zip
+            
+          files: "${{ env.kernel }}-${{ env.device }}-${{ env.builddate }}-AnyKernel3.zip"
